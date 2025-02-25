@@ -17,3 +17,4 @@ pip-delete-this-directory.txt
 
 # VS Code 설정 파일 (개인 설정)
 .vscode/
+models/driver_matching_model.pkl
