@@ -20,6 +20,10 @@ app.add_middleware(
 # 라우터 등록
 app.include_router(order_matching_router)
 
+@app.post("/match-driver")
+async def match_driver(data: dict):
+    return {"message": "Driver matched"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
