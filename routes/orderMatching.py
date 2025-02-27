@@ -1,8 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 import googlemaps
 import pickle
 import logging
+from sqlalchemy.orm import Session
+from database import get_db
+from models.MatchingHistory import MatchingHistory  # 모델 가져오기
 from models.driver_recommendation import DriverMatching, get_train_data
+from crud import save_matching
+from schemas import MatchingData
 
 router = APIRouter()
 
@@ -61,8 +66,28 @@ async def match_driver(data: dict):
         if best_driver is None:
             return {"message": "적합한 기사를 찾을 수 없습니다."}
 
-        return {"matchedDriver": best_driver}  # 프론트에서 navigate()에 사용할 state 포함
+        return {
+            "matchedDriver": best_driver,
+            "origin_latitude": start_lat,
+            "origin_longitude": start_lng,
+            "destination_latitude": end_lat,
+            "destination_longitude": end_lng
+            
+        }
 
     except Exception as e:
         logging.error(f"기사 추천 실패: {str(e)}")
         raise HTTPException(status_code=500, detail=f"기사 추천 실패: {str(e)}")
+    
+# 매칭 정보 저장 API (수정됨)
+@router.post("/save-matching")
+async def save_matching_api(data: MatchingData, db: Session = Depends(get_db)):
+    try:
+        print("요청된 데이터", data.dict())
+        
+        saved_match = save_matching(db, data.customer, data.driver)  
+        return {"message": "매칭 정보가 성공적으로 저장되었습니다!", "match_id": saved_match.id}
+
+    except Exception as e:
+        logging.error(f"매칭 저장 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"매칭 저장 실패: {str(e)}")
